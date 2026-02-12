@@ -59,4 +59,4 @@ jobs:
             --no-fail-on-empty-changeset \
             --resolve-s3 \
             --capabilities CAPABILITY_IAM \
-            --parameter-overrides TicketsBucketName=support-tickets
+            --parameter-overrides TicketsBucketName=project-faultline-tickets
