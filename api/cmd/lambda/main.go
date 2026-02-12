@@ -86,6 +86,7 @@ func setupRouter(ticketHandler *handlers.TicketHandler) {
 	r.Get("/tickets", ticketHandler.ListTickets)
 	r.Patch("/tickets/{id}/status", ticketHandler.UpdateTicketStatus)
 	r.Get("/tickets/upload-url", ticketHandler.GetUploadURL)
+	r.Get("/tickets/download-url", ticketHandler.GetDownloadURL)
 
 	chiLambda = chiadapter.NewV2(r)
 }
@@ -96,8 +97,9 @@ func corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
+		// Handle preflight requests
 		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

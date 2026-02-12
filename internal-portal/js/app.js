@@ -156,6 +156,23 @@ document.addEventListener('alpine:init', () => {
             if (!attachmentKey) return '';
             const parts = attachmentKey.split('/');
             return parts[parts.length - 1];
+        },
+
+        async downloadAttachment(key) {
+            try {
+                const response = await fetch(
+                    `${window.APP_CONFIG.API_BASE_URL}/tickets/download-url?key=${encodeURIComponent(key)}`
+                );
+
+                if (!response.ok) {
+                    throw new Error(`Failed to get download URL: ${response.status}`);
+                }
+
+                const data = await response.json();
+                window.open(data.downloadUrl, '_blank');
+            } catch (err) {
+                this.error = err.message || 'Failed to download attachment. Please try again.';
+            }
         }
     }));
 });

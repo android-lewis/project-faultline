@@ -167,6 +167,33 @@ func (h *TicketHandler) GetUploadURL(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, response)
 }
 
+func (h *TicketHandler) GetDownloadURL(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.Query().Get("key")
+
+	if key == "" {
+		respondWithError(w, http.StatusBadRequest, "key is required", "")
+		return
+	}
+
+	// Generate presigned GET URL with 15 minute expiry
+	presignResult, err := h.s3Presign.PresignGetObject(r.Context(), &s3.GetObjectInput{
+		Bucket: aws.String(h.bucketName),
+		Key:    aws.String(key),
+	}, s3.WithPresignExpires(15*time.Minute))
+
+	if err != nil {
+		log.Printf("Failed to generate presigned download URL: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to generate download URL", "")
+		return
+	}
+
+	response := map[string]string{
+		"downloadUrl": presignResult.URL,
+	}
+
+	respondWithJSON(w, http.StatusOK, response)
+}
+
 func (h *TicketHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"status": "healthy"})
 }
