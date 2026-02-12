@@ -8,3 +8,8 @@ variable "environment" {
   description = "Environment (e.g., demo, dev, prod)"
   default     = "demo"
 }
+
+variable "aws_region" {
+  type        = string
+  description = "AWS region for resources"
+}

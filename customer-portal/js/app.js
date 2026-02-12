@@ -88,13 +88,10 @@ document.addEventListener('alpine:init', () => {
 
             const { uploadUrl, key } = await urlResponse.json();
 
-            // Upload file to S3
+            // Upload file to S3 (no Content-Type header — presigned URL only signs 'host')
             const uploadResponse = await fetch(uploadUrl, {
                 method: 'PUT',
-                body: file,
-                headers: {
-                    'Content-Type': file.type
-                }
+                body: file
             });
 
             if (!uploadResponse.ok) {

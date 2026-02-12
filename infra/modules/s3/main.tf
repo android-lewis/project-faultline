@@ -46,6 +46,18 @@ resource "aws_s3_bucket" "tickets_bucket" {
   }
 }
 
+resource "aws_s3_bucket_cors_configuration" "tickets_bucket_cors" {
+  bucket = aws_s3_bucket.tickets_bucket.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "GET"]
+    allowed_origins = ["http://${aws_s3_bucket.customer_portal_bucket.bucket}.s3-website.${var.aws_region}.amazonaws.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3600
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "customer_portal_public_access" {
   bucket = aws_s3_bucket.customer_portal_bucket.id
 
