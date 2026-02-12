@@ -1,0 +1,6 @@
+// Configuration file for the customer portal
+// Copy this to config.js and update with your actual API Gateway URL
+
+window.APP_CONFIG = {
+    API_BASE_URL: 'https://xxx.execute-api.eu-west-2.amazonaws.com'
+};

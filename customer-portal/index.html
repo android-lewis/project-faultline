@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Support Ticket</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+</head>
+<body>
+    <div class="container" x-data="ticketForm">
+        <header>
+            <h1>Submit a Support Ticket</h1>
+            <p>Describe your issue and attach any relevant files.</p>
+        </header>
+
+        <form @submit.prevent="submitTicket" class="ticket-form">
+            <div class="form-group">
+                <label for="description">Description <span class="required">*</span></label>
+                <textarea 
+                    id="description" 
+                    x-model="description" 
+                    rows="8"
+                    placeholder="Please describe your issue in detail..."
+                    :disabled="submitting"
+                    required
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="attachments">Attachments (optional)</label>
+                <input 
+                    type="file" 
+                    id="attachments" 
+                    @change="handleFileSelect"
+                    :disabled="submitting"
+                    multiple
+                >
+                <div x-show="files.length > 0" class="file-list">
+                    <p class="file-list-label">Selected files:</p>
+                    <ul>
+                        <template x-for="(file, index) in files" :key="index">
+                            <li>
+                                <span x-text="file.name"></span>
+                                <span class="file-size" x-text="formatFileSize(file.size)"></span>
+                                <button 
+                                    type="button" 
+                                    @click="removeFile(index)"
+                                    :disabled="submitting"
+                                    class="remove-file"
+                                    aria-label="Remove file"
+                                >&times;</button>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button 
+                    type="submit" 
+                    :disabled="submitting || !description.trim()"
+                    class="submit-btn"
+                >
+                    <span x-show="!submitting">Submit Ticket</span>
+                    <span x-show="submitting" class="loading">
+                        <span class="spinner"></span> Submitting...
+                    </span>
+                </button>
+            </div>
+
+            <div x-show="success" x-transition class="message success">
+                <strong>✓ Success!</strong>
+                <p>Your ticket has been submitted. Ticket ID: <strong x-text="success"></strong></p>
+            </div>
+
+            <div x-show="error" x-transition class="message error">
+                <strong>✗ Error</strong>
+                <p x-text="error"></p>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

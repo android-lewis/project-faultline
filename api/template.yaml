@@ -30,6 +30,17 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: $default
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - X-Requested-With
+        MaxAge: 600
 
   FaultlineAPI:
     Type: AWS::Serverless::Function
@@ -42,6 +53,8 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref DynamoDBTableName
+        - S3CrudPolicy:
+            BucketName: !Ref TicketsBucketName
       Events:
         HealthCheck:
           Type: HttpApi
@@ -65,6 +78,12 @@ Resources:
           Type: HttpApi
           Properties:
             Path: /tickets
+            Method: GET
+            ApiId: !Ref FaultlineApi
+        GetUploadURL:
+          Type: HttpApi
+          Properties:
+            Path: /tickets/upload-url
             Method: GET
             ApiId: !Ref FaultlineApi
 

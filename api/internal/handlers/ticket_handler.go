@@ -3,23 +3,32 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/android-lewis/project-faultline/internal/models"
 	"github.com/android-lewis/project-faultline/internal/repository"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
 type TicketHandler struct {
-	repo repository.TicketRepository
+	repo      repository.TicketRepository
+	s3Client  *s3.Client
+	s3Presign *s3.PresignClient
+	bucketName string
 }
 
-func NewTicketHandler(repo repository.TicketRepository) *TicketHandler {
+func NewTicketHandler(repo repository.TicketRepository, s3Client *s3.Client, bucketName string) *TicketHandler {
 	return &TicketHandler{
-		repo: repo,
+		repo:      repo,
+		s3Client:  s3Client,
+		s3Presign: s3.NewPresignClient(s3Client),
+		bucketName: bucketName,
 	}
 }
 
@@ -87,6 +96,43 @@ func (h *TicketHandler) ListTickets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, tickets)
+}
+
+func (h *TicketHandler) GetUploadURL(w http.ResponseWriter, r *http.Request) {
+	filename := r.URL.Query().Get("filename")
+	contentType := r.URL.Query().Get("contentType")
+
+	if filename == "" {
+		respondWithError(w, http.StatusBadRequest, "filename is required", "")
+		return
+	}
+
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	// Generate unique key: attachments/{uuid}/{filename}
+	key := fmt.Sprintf("attachments/%s/%s", uuid.New().String(), filename)
+
+	// Generate presigned PUT URL with 15 minute expiry
+	presignResult, err := h.s3Presign.PresignPutObject(r.Context(), &s3.PutObjectInput{
+		Bucket:      aws.String(h.bucketName),
+		Key:         aws.String(key),
+		ContentType: aws.String(contentType),
+	}, s3.WithPresignExpires(15*time.Minute))
+
+	if err != nil {
+		log.Printf("Failed to generate presigned URL: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to generate upload URL", "")
+		return
+	}
+
+	response := map[string]string{
+		"uploadUrl": presignResult.URL,
+		"key":       key,
+	}
+
+	respondWithJSON(w, http.StatusOK, response)
 }
 
 func (h *TicketHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {

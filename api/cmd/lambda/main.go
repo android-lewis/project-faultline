@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	chiadapter "github.com/awslabs/aws-lambda-go-api-proxy/chi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -22,6 +23,11 @@ func init() {
 	tableName := os.Getenv("DYNAMODB_TABLE_NAME")
 	if tableName == "" {
 		log.Fatal("DYNAMODB_TABLE_NAME environment variable is required")
+	}
+
+	bucketName := os.Getenv("S3_BUCKET_NAME")
+	if bucketName == "" {
+		log.Fatal("S3_BUCKET_NAME environment variable is required")
 	}
 
 	ctx := context.Background()
@@ -53,8 +59,14 @@ func init() {
 		dynamoClient = dynamodb.NewFromConfig(cfg)
 	}
 
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		log.Fatalf("Failed to load AWS config: %v", err)
+	}
+
+	s3Client := s3.NewFromConfig(cfg)
 	ticketRepo := repository.NewDynamoDBTicketRepository(dynamoClient, tableName)
-	ticketHandler := handlers.NewTicketHandler(ticketRepo)
+	ticketHandler := handlers.NewTicketHandler(ticketRepo, s3Client, bucketName)
 	setupRouter(ticketHandler)
 }
 
@@ -70,6 +82,7 @@ func setupRouter(ticketHandler *handlers.TicketHandler) {
 	r.Post("/tickets", ticketHandler.CreateTicket)
 	r.Get("/tickets/{id}", ticketHandler.GetTicket)
 	r.Get("/tickets", ticketHandler.ListTickets)
+	r.Get("/tickets/upload-url", ticketHandler.GetUploadURL)
 
 	chiLambda = chiadapter.NewV2(r)
 }

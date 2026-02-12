@@ -1,0 +1,45 @@
+name: Customer Portal Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'customer-portal/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: './customer-portal'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate config.js
+        run: |
+          cat > js/config.js <<EOF
+          window.APP_CONFIG = {
+              API_BASE_URL: '${{ vars.CUSTOMER_PORTAL_API_URL }}'
+          };
+          EOF
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync . s3://project-faultline-customer-portal \
+            --delete \
+            --exclude ".gitignore" \
+            --exclude "*.example" \
+            --exclude "README.md"
