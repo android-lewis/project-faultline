@@ -1,4 +1,4 @@
-module github.com/android-lewis/faultline
+module github.com/android-lewis/project-faultline
 
 go 1.26
 

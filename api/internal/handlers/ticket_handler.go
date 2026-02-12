@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/android-lewis/faultline/internal/models"
-	"github.com/android-lewis/faultline/internal/repository"
+	"github.com/android-lewis/project-faultline/internal/models"
+	"github.com/android-lewis/project-faultline/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )

@@ -15,7 +15,6 @@ deployment.zip
 
 # Go workspace file
 go.work
-go.sum
 
 # Dependency directories
 vendor/

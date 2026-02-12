@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/android-lewis/faultline/internal/handlers"
-	"github.com/android-lewis/faultline/internal/repository"
+	"github.com/android-lewis/project-faultline/internal/handlers"
+	"github.com/android-lewis/project-faultline/internal/repository"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
