@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type TicketStatus string
 
@@ -22,6 +25,17 @@ type Ticket struct {
 type CreateTicketRequest struct {
 	Description string   `json:"description"`
 	Attachments []string `json:"attachments"`
+}
+
+type UpdateTicketRequest struct {
+	Status TicketStatus `json:"status"`
+}
+
+func (r *UpdateTicketRequest) Validate() error {
+	if r.Status != StatusOpen && r.Status != StatusClosed && r.Status != StatusInProgress {
+		return fmt.Errorf("invalid status: must be one of 'open', 'closed', or 'in-progress'")
+	}
+	return nil
 }
 
 type ErrorResponse struct {

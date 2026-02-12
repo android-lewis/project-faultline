@@ -1,0 +1,3 @@
+window.APP_CONFIG = {
+    API_BASE_URL: 'https://xxx.execute-api.eu-west-2.amazonaws.com'
+};

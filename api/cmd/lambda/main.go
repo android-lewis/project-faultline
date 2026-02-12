@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/android-lewis/project-faultline/internal/handlers"
@@ -76,15 +77,32 @@ func setupRouter(ticketHandler *handlers.TicketHandler) {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
+	r.Use(corsMiddleware)
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
 
 	r.Get("/health", ticketHandler.HealthCheck)
 	r.Post("/tickets", ticketHandler.CreateTicket)
 	r.Get("/tickets/{id}", ticketHandler.GetTicket)
 	r.Get("/tickets", ticketHandler.ListTickets)
+	r.Patch("/tickets/{id}/status", ticketHandler.UpdateTicketStatus)
 	r.Get("/tickets/upload-url", ticketHandler.GetUploadURL)
 
 	chiLambda = chiadapter.NewV2(r)
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func main() {

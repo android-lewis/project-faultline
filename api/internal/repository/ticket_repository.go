@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/android-lewis/project-faultline/internal/models"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,6 +19,7 @@ type TicketRepository interface {
 	CreateTicket(ctx context.Context, ticket *models.Ticket) error
 	GetTicket(ctx context.Context, id string) (*models.Ticket, error)
 	ListTickets(ctx context.Context) ([]models.Ticket, error)
+	UpdateTicketStatus(ctx context.Context, id string, status models.TicketStatus) (*models.Ticket, error)
 }
 
 type DynamoDBTicketRepository struct {
@@ -91,4 +93,40 @@ func (r *DynamoDBTicketRepository) ListTickets(ctx context.Context) ([]models.Ti
 	}
 
 	return tickets, nil
+}
+
+func (r *DynamoDBTicketRepository) UpdateTicketStatus(ctx context.Context, id string, status models.TicketStatus) (*models.Ticket, error) {
+	now := aws.Time(time.Now().UTC())
+
+	result, err := r.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(r.tableName),
+		Key: map[string]types.AttributeValue{
+			"TicketID": &types.AttributeValueMemberS{Value: id},
+		},
+		UpdateExpression: aws.String("SET #status = :s, UpdatedAt = :u"),
+		ExpressionAttributeNames: map[string]string{
+			"#status": "Status",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":s": &types.AttributeValueMemberS{Value: string(status)},
+			":u": &types.AttributeValueMemberS{Value: now.Format(time.RFC3339Nano)},
+		},
+		ReturnValues: types.ReturnValueAllNew,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to update ticket: %w", err)
+	}
+
+	if result.Attributes == nil {
+		return nil, ErrTicketNotFound
+	}
+
+	var ticket models.Ticket
+	err = attributevalue.UnmarshalMap(result.Attributes, &ticket)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal ticket: %w", err)
+	}
+
+	return &ticket, nil
 }

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Details — Internal</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+</head>
+<body>
+    <div class="container" x-data="ticketDetail">
+        <header>
+            <div class="header-with-back">
+                <a href="index.html" class="back-link">← Back to tickets</a>
+                <h1>Ticket Details</h1>
+            </div>
+        </header>
+
+        <div x-show="loading" class="loading-container">
+            <span class="spinner"></span>
+            <p>Loading ticket...</p>
+        </div>
+
+        <div x-show="error" x-transition class="message error">
+            <strong>Error</strong>
+            <p x-text="error"></p>
+        </div>
+
+        <div x-show="success" x-transition class="message success">
+            <strong>Success!</strong>
+            <p x-text="success"></p>
+        </div>
+
+        <div x-show="!loading && ticket && !error" class="ticket-detail">
+            <div class="detail-section">
+                <label>Ticket ID</label>
+                <div class="detail-value" x-text="ticket.id"></div>
+            </div>
+
+            <div class="detail-section">
+                <label>Status</label>
+                <div class="status-row">
+                    <span 
+                        class="status-badge" 
+                        :class="'status-' + ticket.status"
+                        x-text="ticket.status"
+                    ></span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <label>Description</label>
+                <div class="detail-value description" x-text="ticket.description"></div>
+            </div>
+
+            <div class="detail-section" x-show="ticket.attachments && ticket.attachments.length > 0">
+                <label>Attachments</label>
+                <ul class="attachment-list">
+                    <template x-for="attachment in ticket.attachments" :key="attachment">
+                        <li x-text="getFilename(attachment)"></li>
+                    </template>
+                </ul>
+            </div>
+
+            <div class="detail-section">
+                <label>Created</label>
+                <div class="detail-value" x-text="formatDateTime(ticket.created_at)"></div>
+            </div>
+
+            <div class="detail-section">
+                <label>Last Updated</label>
+                <div class="detail-value" x-text="formatDateTime(ticket.updated_at)"></div>
+            </div>
+
+            <div class="update-status-section">
+                <h2>Update Status</h2>
+                <form @submit.prevent="updateStatus" class="status-form">
+                    <div class="form-row">
+                        <select x-model="newStatus" :disabled="updating" class="status-select">
+                            <option value="open">Open</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                        <button 
+                            type="submit" 
+                            :disabled="updating || newStatus === ticket.status"
+                            class="update-btn"
+                        >
+                            <span x-show="!updating">Update Status</span>
+                            <span x-show="updating" class="loading">
+                                <span class="spinner"></span> Updating...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

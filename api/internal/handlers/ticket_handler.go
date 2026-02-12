@@ -17,17 +17,17 @@ import (
 )
 
 type TicketHandler struct {
-	repo      repository.TicketRepository
-	s3Client  *s3.Client
-	s3Presign *s3.PresignClient
+	repo       repository.TicketRepository
+	s3Client   *s3.Client
+	s3Presign  *s3.PresignClient
 	bucketName string
 }
 
 func NewTicketHandler(repo repository.TicketRepository, s3Client *s3.Client, bucketName string) *TicketHandler {
 	return &TicketHandler{
-		repo:      repo,
-		s3Client:  s3Client,
-		s3Presign: s3.NewPresignClient(s3Client),
+		repo:       repo,
+		s3Client:   s3Client,
+		s3Presign:  s3.NewPresignClient(s3Client),
 		bucketName: bucketName,
 	}
 }
@@ -96,6 +96,38 @@ func (h *TicketHandler) ListTickets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, tickets)
+}
+
+func (h *TicketHandler) UpdateTicketStatus(w http.ResponseWriter, r *http.Request) {
+	ticketID := chi.URLParam(r, "id")
+	if ticketID == "" {
+		respondWithError(w, http.StatusBadRequest, "Ticket ID is required", "")
+		return
+	}
+
+	var req models.UpdateTicketRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload", err.Error())
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error(), "")
+		return
+	}
+
+	ticket, err := h.repo.UpdateTicketStatus(r.Context(), ticketID, req.Status)
+	if err != nil {
+		if errors.Is(err, repository.ErrTicketNotFound) {
+			respondWithError(w, http.StatusNotFound, "Ticket not found", "")
+			return
+		}
+		log.Printf("Failed to update ticket status: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to update ticket status", "")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, ticket)
 }
 
 func (h *TicketHandler) GetUploadURL(w http.ResponseWriter, r *http.Request) {
