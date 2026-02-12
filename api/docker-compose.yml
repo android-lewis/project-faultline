@@ -1,0 +1,29 @@
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: faultline-dynamodb-local
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb"
+    working_dir: /home/dynamodblocal
+    networks:
+      - faultline-network
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    container_name: faultline-dynamodb-admin
+    ports:
+      - "8001:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb-local:8000
+      - AWS_REGION=eu-west-2
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      - dynamodb-local
+    networks:
+      - faultline-network
+
+networks:
+  faultline-network:
+    driver: bridge

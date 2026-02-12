@@ -1,0 +1,61 @@
+name: API Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'api/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache-dependency-path: api/go.sum
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Lint
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test -v -short ./internal/handlers/...
+
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: SAM build
+        run: sam build
+
+      - name: SAM deploy
+        run: |
+          sam deploy \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --resolve-s3 \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides TicketsBucketName=support-tickets

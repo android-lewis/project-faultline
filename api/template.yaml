@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Faultline Support Ticket API - Lambda and API Gateway
+
+Parameters:
+  TicketsBucketName:
+    Type: String
+    Description: S3 bucket name for ticket attachments (managed by Terraform)
+
+  DynamoDBTableName:
+    Type: String
+    Description: DynamoDB table name for tickets (managed by Terraform)
+    Default: support-tickets
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: provided.al2023
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        DYNAMODB_TABLE_NAME: !Ref DynamoDBTableName
+        S3_BUCKET_NAME: !Ref TicketsBucketName
+        DYNAMODB_ENDPOINT_URL: ''
+
+Resources:
+  FaultlineApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+
+  FaultlineAPI:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: cmd/lambda/
+      Handler: bootstrap
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTableName
+      Events:
+        HealthCheck:
+          Type: HttpApi
+          Properties:
+            Path: /health
+            Method: GET
+            ApiId: !Ref FaultlineApi
+        CreateTicket:
+          Type: HttpApi
+          Properties:
+            Path: /tickets
+            Method: POST
+            ApiId: !Ref FaultlineApi
+        GetTicket:
+          Type: HttpApi
+          Properties:
+            Path: /tickets/{id}
+            Method: GET
+            ApiId: !Ref FaultlineApi
+        ListTickets:
+          Type: HttpApi
+          Properties:
+            Path: /tickets
+            Method: GET
+            ApiId: !Ref FaultlineApi
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${FaultlineApi}.execute-api.${AWS::Region}.amazonaws.com'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiEndpoint'
+  
+  FunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt FaultlineAPI.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionArn'
+  
+  FunctionName:
+    Description: Lambda function name
+    Value: !Ref FaultlineAPI
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionName'
