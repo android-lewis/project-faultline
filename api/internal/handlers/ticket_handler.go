@@ -48,6 +48,7 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 		ID:          uuid.New().String(),
 		Description: req.Description,
 		Attachments: req.Attachments,
+		Reporter:    req.Reporter,
 		Status:      models.StatusOpen,
 		CreatedAt:   time.Now().UTC(),
 		UpdatedAt:   time.Now().UTC(),

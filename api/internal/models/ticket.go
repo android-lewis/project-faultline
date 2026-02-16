@@ -17,7 +17,10 @@ type Ticket struct {
 	ID          string       `json:"id" dynamodbav:"TicketID"`
 	Description string       `json:"description" dynamodbav:"Description"`
 	Attachments []string     `json:"attachments" dynamodbav:"Attachments"`
+	Reporter    string       `json:"reporter" dynamodbav:"Reporter"`
 	Status      TicketStatus `json:"status" dynamodbav:"Status"`
+	Summary     string       `json:"summary,omitempty" dynamodbav:"Summary,omitempty"`
+	Sentiment   string       `json:"sentiment,omitempty" dynamodbav:"Sentiment,omitempty"`
 	CreatedAt   time.Time    `json:"created_at" dynamodbav:"CreatedAt"`
 	UpdatedAt   time.Time    `json:"updated_at" dynamodbav:"UpdatedAt"`
 }
@@ -25,6 +28,7 @@ type Ticket struct {
 type CreateTicketRequest struct {
 	Description string   `json:"description"`
 	Attachments []string `json:"attachments"`
+	Reporter    string   `json:"reporter"`
 }
 
 type UpdateTicketRequest struct {
