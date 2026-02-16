@@ -16,6 +16,11 @@ capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
 region = "eu-west-2"
+parameter_overrides = [
+  "CognitoUserPoolId=\"PLACEHOLDER\"",
+  "CustomerPortalClientId=\"PLACEHOLDER\"",
+  "InternalPortalClientId=\"PLACEHOLDER\""
+]
 
 [default.local_start_api.parameters]
 warm_containers = "EAGER"

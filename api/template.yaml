@@ -12,6 +12,18 @@ Parameters:
     Description: DynamoDB table name for tickets (managed by Terraform)
     Default: support-tickets
 
+  CognitoUserPoolId:
+    Type: String
+    Description: Cognito User Pool ID (managed by Terraform)
+
+  CustomerPortalClientId:
+    Type: String
+    Description: Cognito App Client ID for customer portal (managed by Terraform)
+
+  InternalPortalClientId:
+    Type: String
+    Description: Cognito App Client ID for internal portal (managed by Terraform)
+
 Globals:
   Function:
     Timeout: 30
@@ -23,6 +35,7 @@ Globals:
       Variables:
         DYNAMODB_TABLE_NAME: !Ref DynamoDBTableName
         S3_BUCKET_NAME: !Ref TicketsBucketName
+        COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
         DYNAMODB_ENDPOINT_URL: ''
 
 Resources:
@@ -30,6 +43,17 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: $default
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            AuthorizationScopes: []
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPoolId}"
+              audience:
+                - !Ref CustomerPortalClientId
+                - !Ref InternalPortalClientId
       CorsConfiguration:
         AllowOrigins:
           - '*'
@@ -41,6 +65,7 @@ Resources:
         AllowHeaders:
           - Content-Type
           - X-Requested-With
+          - Authorization
         MaxAge: 600
 
   FaultlineAPI:
@@ -63,6 +88,8 @@ Resources:
             Path: /health
             Method: GET
             ApiId: !Ref FaultlineApi
+            Auth:
+              Authorizer: NONE
         CreateTicket:
           Type: HttpApi
           Properties:
