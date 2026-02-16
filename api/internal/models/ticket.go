@@ -18,6 +18,8 @@ type Ticket struct {
 	Description string       `json:"description" dynamodbav:"Description"`
 	Attachments []string     `json:"attachments" dynamodbav:"Attachments"`
 	Reporter    string       `json:"reporter" dynamodbav:"Reporter"`
+	UserID      string       `json:"user_id" dynamodbav:"UserID"`
+	UserEmail   string       `json:"user_email" dynamodbav:"UserEmail"`
 	Status      TicketStatus `json:"status" dynamodbav:"Status"`
 	Summary     string       `json:"summary,omitempty" dynamodbav:"Summary,omitempty"`
 	Sentiment   string       `json:"sentiment,omitempty" dynamodbav:"Sentiment,omitempty"`

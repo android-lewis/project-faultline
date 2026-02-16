@@ -33,6 +33,8 @@ func NewTicketHandler(repo repository.TicketRepository, s3Client *s3.Client, buc
 }
 
 func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
+	claims := ExtractJWTClaims(r)
+
 	var req models.CreateTicketRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload", err.Error())
@@ -49,6 +51,8 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 		Description: req.Description,
 		Attachments: req.Attachments,
 		Reporter:    req.Reporter,
+		UserID:      claims.Sub,
+		UserEmail:   claims.Email,
 		Status:      models.StatusOpen,
 		CreatedAt:   time.Now().UTC(),
 		UpdatedAt:   time.Now().UTC(),
@@ -68,6 +72,7 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TicketHandler) GetTicket(w http.ResponseWriter, r *http.Request) {
+	claims := ExtractJWTClaims(r)
 	ticketID := chi.URLParam(r, "id")
 	if ticketID == "" {
 		respondWithError(w, http.StatusBadRequest, "Ticket ID is required", "")
@@ -85,11 +90,26 @@ func (h *TicketHandler) GetTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !claims.IsAdmin() && ticket.UserID != claims.Sub {
+		respondWithError(w, http.StatusForbidden, "Access denied", "")
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, ticket)
 }
 
 func (h *TicketHandler) ListTickets(w http.ResponseWriter, r *http.Request) {
-	tickets, err := h.repo.ListTickets(r.Context())
+	claims := ExtractJWTClaims(r)
+
+	var tickets []models.Ticket
+	var err error
+
+	if claims.IsAdmin() {
+		tickets, err = h.repo.ListTickets(r.Context())
+	} else {
+		tickets, err = h.repo.ListTicketsByUser(r.Context(), claims.Sub)
+	}
+
 	if err != nil {
 		log.Printf("Failed to list tickets: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "Failed to list tickets", "")
@@ -100,6 +120,13 @@ func (h *TicketHandler) ListTickets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TicketHandler) UpdateTicketStatus(w http.ResponseWriter, r *http.Request) {
+	claims := ExtractJWTClaims(r)
+
+	if !claims.IsAdmin() {
+		respondWithError(w, http.StatusForbidden, "Access denied - admin privileges required", "")
+		return
+	}
+
 	ticketID := chi.URLParam(r, "id")
 	if ticketID == "" {
 		respondWithError(w, http.StatusBadRequest, "Ticket ID is required", "")

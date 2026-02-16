@@ -19,6 +19,7 @@ type TicketRepository interface {
 	CreateTicket(ctx context.Context, ticket *models.Ticket) error
 	GetTicket(ctx context.Context, id string) (*models.Ticket, error)
 	ListTickets(ctx context.Context) ([]models.Ticket, error)
+	ListTicketsByUser(ctx context.Context, userID string) ([]models.Ticket, error)
 	UpdateTicketStatus(ctx context.Context, id string, status models.TicketStatus) (*models.Ticket, error)
 }
 
@@ -84,6 +85,29 @@ func (r *DynamoDBTicketRepository) ListTickets(ctx context.Context) ([]models.Ti
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan table: %w", err)
+	}
+
+	var tickets []models.Ticket
+	err = attributevalue.UnmarshalListOfMaps(result.Items, &tickets)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tickets: %w", err)
+	}
+
+	return tickets, nil
+}
+
+func (r *DynamoDBTicketRepository) ListTicketsByUser(ctx context.Context, userID string) ([]models.Ticket, error) {
+	result, err := r.client.Query(ctx, &dynamodb.QueryInput{
+		TableName:              aws.String(r.tableName),
+		IndexName:              aws.String("UserID-index"),
+		KeyConditionExpression: aws.String("UserID = :uid"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":uid": &types.AttributeValueMemberS{Value: userID},
+		},
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query tickets by user: %w", err)
 	}
 
 	var tickets []models.Ticket

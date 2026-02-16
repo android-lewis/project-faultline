@@ -37,3 +37,33 @@ output "github_actions_role_arn" {
   value       = module.iam.github_actions_role_arn
   description = "ARN of the GitHub Actions IAM role for SAM deploy"
 }
+
+output "cognito_user_pool_id" {
+  value       = module.cognito.user_pool_id
+  description = "Cognito User Pool ID (for SAM and portals)"
+}
+
+output "cognito_user_pool_arn" {
+  value       = module.cognito.user_pool_arn
+  description = "Cognito User Pool ARN (for SAM)"
+}
+
+output "cognito_user_pool_endpoint" {
+  value       = module.cognito.user_pool_endpoint
+  description = "Cognito User Pool endpoint"
+}
+
+output "cognito_customer_portal_client_id" {
+  value       = module.cognito.customer_portal_client_id
+  description = "Cognito App Client ID for customer portal"
+}
+
+output "cognito_internal_portal_client_id" {
+  value       = module.cognito.internal_portal_client_id
+  description = "Cognito App Client ID for internal portal"
+}
+
+output "cognito_user_pool_domain" {
+  value       = module.cognito.user_pool_domain
+  description = "Cognito User Pool domain"
+}
