@@ -1,8 +1,8 @@
 export function NotFound() {
 	return (
-		<section>
-			<h1>404: Not Found</h1>
-			<p>It's gone :(</p>
+		<section class="mx-auto w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+			<h1 class="mb-2 text-2xl font-semibold text-slate-900">404: Not Found</h1>
+			<p class="text-sm text-slate-600">The page you requested does not exist.</p>
 		</section>
 	);
 }

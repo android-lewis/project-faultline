@@ -8,6 +8,9 @@ Preact + Vite single-page application for customer support ticket submission wit
 - **Routing**: Client-side routing via `preact-iso`
 - **Auth Management**: `oidc-client-ts` for token handling, auto-refresh, and session storage
 - **API Integration**: Authenticated requests to the Lambda API with JWT bearer tokens
+- **Ticket Submission**: Create tickets with optional file attachments uploaded via presigned S3 URLs
+- **Ticket List**: View and refresh your existing tickets on the home page
+- **Styling**: Tailwind CSS v4 via Vite plugin
 
 ## Prerequisites
 
@@ -108,7 +111,9 @@ customer-portal/
 │   │   ├── auth-service.ts        # Auth service wrapper
 │   │   └── AuthGuard.tsx          # Protected route guard
 │   ├── components/
-│   │   └── Header.tsx             # Nav with user info + logout
+│   │   ├── Header.tsx             # Nav with user info + logout
+│   │   ├── TicketForm.tsx         # Submit ticket + attachment upload
+│   │   └── TicketList.tsx         # User ticket list
 │   ├── pages/
 │   │   ├── Home/
 │   │   ├── Callback/              # OAuth callback handler

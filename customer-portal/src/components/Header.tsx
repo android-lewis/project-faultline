@@ -21,15 +21,25 @@ export function Header() {
 	};
 
 	return (
-		<header>
-			<nav>
-				<a href="/" class={url == '/' && 'active'}>
+		<header class="bg-slate-900 text-white shadow-sm">
+			<nav class="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-3">
+				<a
+					href="/"
+					class={`rounded px-3 py-2 text-sm font-medium transition ${
+						url === '/' ? 'bg-white/20' : 'hover:bg-white/10'
+					}`}
+				>
 					Home
 				</a>
 				{userEmail && (
-					<div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-						<span>{userEmail}</span>
-						<button onClick={handleLogout}>Logout</button>
+					<div class="ml-auto flex items-center gap-3">
+						<span class="hidden text-sm text-slate-200 sm:inline">{userEmail}</span>
+						<button
+							onClick={() => void handleLogout()}
+							class="rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600"
+						>
+							Logout
+						</button>
 					</div>
 				)}
 			</nav>

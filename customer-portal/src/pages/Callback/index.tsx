@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { authService } from '../../auth/auth-service';
@@ -23,17 +22,19 @@ export default function Callback() {
 
   if (error) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>Authentication Error</h1>
-        <p style={{ color: 'red' }}>{error}</p>
-        <a href="/">Return to Home</a>
+      <div class="mx-auto w-full max-w-2xl rounded-xl border border-rose-200 bg-white p-8 text-center shadow-sm">
+        <h1 class="mb-2 text-2xl font-semibold text-slate-900">Authentication Error</h1>
+        <p class="mb-4 text-sm text-rose-700">{error}</p>
+        <a class="text-sm font-medium text-slate-900 underline" href="/">
+          Return to Home
+        </a>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>Completing authentication...</h1>
+    <div class="mx-auto w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <h1 class="text-2xl font-semibold text-slate-900">Completing authentication...</h1>
     </div>
   );
 }
