@@ -140,6 +140,7 @@ data "aws_iam_policy_document" "github_actions_sam_deploy" {
     sid = "S3Access"
     actions = [
       "s3:CreateBucket",
+      "s3:DeleteObject",
       "s3:GetBucketLocation",
       "s3:GetObject",
       "s3:ListBucket",

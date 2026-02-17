@@ -1,6 +1,6 @@
 import { useLocation } from 'preact-iso';
 import { useEffect, useState } from 'preact/hooks';
-import { authService } from '../auth/auth-service';
+import { authService } from '@project-faultline/common';
 
 export function Header() {
 	const { url } = useLocation();

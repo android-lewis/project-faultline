@@ -5,7 +5,7 @@ import { Header } from './components/Header.js';
 import { Home } from './pages/Home/index.js';
 import { NotFound } from './pages/_404.js';
 import Callback from './pages/Callback/index.js';
-import { AuthGuard } from './auth/AuthGuard.js';
+import { AuthGuard } from '@project-faultline/common';
 import './style.css';
 
 export function App() {
