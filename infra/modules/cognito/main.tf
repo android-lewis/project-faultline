@@ -127,6 +127,13 @@ resource "aws_cognito_user_pool_client" "internal_portal" {
   write_attributes = [
     "email"
   ]
+
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code"]
+  allowed_oauth_scopes                 = ["openid", "email", "profile"]
+  callback_urls                        = var.internal_portal_callback_urls
+  logout_urls                          = var.internal_portal_logout_urls
+  supported_identity_providers         = ["COGNITO"]
 }
 
 resource "aws_cognito_user" "test_user" {

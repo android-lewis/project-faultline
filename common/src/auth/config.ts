@@ -9,8 +9,8 @@ const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
 if (!authority || !clientId || !redirectUri || !postLogoutRedirectUri || !cognitoDomain) {
   throw new Error(
     'Missing required environment variables. Ensure VITE_COGNITO_AUTHORITY, ' +
-    'VITE_COGNITO_CLIENT_ID, VITE_COGNITO_REDIRECT_URI, VITE_COGNITO_POST_LOGOUT_REDIRECT_URI, ' +
-    'and VITE_COGNITO_DOMAIN are set.'
+      'VITE_COGNITO_CLIENT_ID, VITE_COGNITO_REDIRECT_URI, VITE_COGNITO_POST_LOGOUT_REDIRECT_URI, ' +
+      'and VITE_COGNITO_DOMAIN are set.'
   );
 }
 

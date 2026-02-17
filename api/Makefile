@@ -91,6 +91,23 @@ sam-local-dynamo: sam-build
 	AWS_SECRET_ACCESS_KEY=dummy \
 	sam local start-api --env-vars env.json --docker-network api_faultline-network
 
+# Local development with SAM + debugger (Delve)
+# Builds the Go binary with debug flags and runs under delve on port 3000
+local-debug:
+	@echo "Building with debug flags..."
+	cd cmd/lambda && go build -gcflags="all=-N -l" -o ../../bootstrap .
+	@echo "Starting API with Delve debugger on port 5986..."
+	@echo "API will be available at http://localhost:3000"
+	@echo "Attach VS Code debugger to localhost:5986"
+	DYNAMODB_TABLE_NAME=support-tickets \
+	S3_BUCKET_NAME=faultline-tickets \
+	DYNAMODB_ENDPOINT_URL=http://localhost:8000 \
+	LOCAL_SERVER_PORT=3000 \
+	AWS_ACCESS_KEY_ID=dummy \
+	AWS_SECRET_ACCESS_KEY=dummy \
+	AWS_REGION=eu-west-2 \
+	dlv exec ./bootstrap --headless --listen=:5986 --api-version=2 --accept-multiclient
+
 # Standard SAM local (without DynamoDB Local integration)
 sam-local: sam-build
 	sam local start-api

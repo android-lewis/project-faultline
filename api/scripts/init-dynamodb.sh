@@ -34,9 +34,12 @@ aws dynamodb create-table \
   --table-name support-tickets \
   --attribute-definitions \
     AttributeName=TicketID,AttributeType=S \
+    AttributeName=UserID,AttributeType=S \
   --key-schema \
     AttributeName=TicketID,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST \
+  --global-secondary-indexes \
+    'IndexName=UserID-index,KeySchema=[{AttributeName=UserID,KeyType=HASH}],Projection={ProjectionType=ALL}' \
   --endpoint-url http://localhost:8000 \
   --region eu-west-2 \
   --output text

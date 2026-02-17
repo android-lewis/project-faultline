@@ -20,6 +20,7 @@ aws dynamodb put-item \
   --table-name "${TABLE_NAME}" \
   --item '{
     "TicketID": {"S": "test-ticket-001"},
+    "UserID": {"S": "test-user-001"},
     "Description": {"S": "Cannot access my account"},
     "Status": {"S": "open"},
     "Attachments": {"L": []},
@@ -33,6 +34,7 @@ aws dynamodb put-item \
   --table-name "${TABLE_NAME}" \
   --item '{
     "TicketID": {"S": "test-ticket-002"},
+    "UserID": {"S": "test-user-001"},
     "Description": {"S": "Feature request: dark mode"},
     "Status": {"S": "in-progress"},
     "Attachments": {"L": [{"S": "https://example.com/screenshot.png"}]},
@@ -46,6 +48,7 @@ aws dynamodb put-item \
   --table-name "${TABLE_NAME}" \
   --item '{
     "TicketID": {"S": "test-ticket-003"},
+    "UserID": {"S": "test-user-002"},
     "Description": {"S": "Bug: application crashes on startup"},
     "Status": {"S": "closed"},
     "Attachments": {"L": [{"S": "https://example.com/logs.txt"}, {"S": "https://example.com/crash-dump.log"}]},

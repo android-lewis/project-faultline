@@ -18,16 +18,21 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    await this.userManager.signoutRedirect();
+    await this.userManager.signoutRedirect({
+      extraQueryParams: {
+        client_id: this.userManager.settings.client_id,
+        logout_uri: this.userManager.settings.post_logout_redirect_uri,
+      },
+    });
   }
 
   async getUser(): Promise<User | null> {
-    return await this.userManager.getUser();
+    return this.userManager.getUser();
   }
 
   async getAccessToken(): Promise<string | null> {
     const user = await this.getUser();
-    return user?.access_token || null;
+    return user?.access_token ?? null;
   }
 
   async isAuthenticated(): Promise<boolean> {
