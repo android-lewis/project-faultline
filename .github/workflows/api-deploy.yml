@@ -59,4 +59,8 @@ jobs:
             --no-fail-on-empty-changeset \
             --resolve-s3 \
             --capabilities CAPABILITY_IAM \
-            --parameter-overrides TicketsBucketName=project-faultline-tickets
+            --parameter-overrides \
+              TicketsBucketName=project-faultline-tickets \
+              CognitoUserPoolId=${{ vars.COGNITO_USER_POOL_ID }} \
+              CustomerPortalClientId=${{ vars.CUSTOMER_PORTAL_CLIENT_ID }} \
+              InternalPortalClientId=${{ vars.INTERNAL_PORTAL_CLIENT_ID }}
