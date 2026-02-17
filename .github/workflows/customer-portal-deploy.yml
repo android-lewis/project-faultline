@@ -22,13 +22,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Generate config.js
-        run: |
-          cat > js/config.js <<EOF
-          window.APP_CONFIG = {
-              API_BASE_URL: '${{ vars.CUSTOMER_PORTAL_API_URL }}'
-          };
-          EOF
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: './customer-portal/pnpm-lock.yaml'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build with Vite
+        env:
+          VITE_COGNITO_AUTHORITY: ${{ vars.VITE_COGNITO_AUTHORITY }}
+          VITE_COGNITO_CLIENT_ID: ${{ vars.VITE_COGNITO_CLIENT_ID }}
+          VITE_COGNITO_DOMAIN: ${{ vars.VITE_COGNITO_DOMAIN }}
+          VITE_COGNITO_REDIRECT_URI: ${{ vars.VITE_COGNITO_REDIRECT_URI }}
+          VITE_COGNITO_POST_LOGOUT_REDIRECT_URI: ${{ vars.VITE_COGNITO_POST_LOGOUT_REDIRECT_URI }}
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+        run: pnpm run build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -38,8 +55,11 @@ jobs:
 
       - name: Sync to S3
         run: |
-          aws s3 sync . s3://project-faultline-customer-portal \
+          aws s3 sync dist/ s3://project-faultline-customer-portal-demo \
             --delete \
-            --exclude ".gitignore" \
-            --exclude "*.example" \
-            --exclude "README.md"
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html"
+          
+          aws s3 cp dist/index.html s3://project-faultline-customer-portal-demo/index.html \
+            --cache-control "public, max-age=0, must-revalidate" \
+            --content-type "text/html"
