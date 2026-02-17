@@ -55,11 +55,11 @@ jobs:
 
       - name: Sync to S3
         run: |
-          aws s3 sync dist/ s3://project-faultline-customer-portal-demo \
+          aws s3 sync dist/ s3://project-faultline-customer-portal \
             --delete \
             --cache-control "public, max-age=31536000, immutable" \
             --exclude "index.html"
           
-          aws s3 cp dist/index.html s3://project-faultline-customer-portal-demo/index.html \
+          aws s3 cp dist/index.html s3://project-faultline-customer-portal/index.html \
             --cache-control "public, max-age=0, must-revalidate" \
             --content-type "text/html"
