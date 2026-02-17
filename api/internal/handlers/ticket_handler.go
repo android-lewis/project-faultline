@@ -106,6 +106,9 @@ func (h *TicketHandler) ListTickets(w http.ResponseWriter, r *http.Request) {
 
 	if claims.IsAdmin() {
 		tickets, err = h.repo.ListTickets(r.Context())
+	} else if claims.Sub == "" {
+		respondWithError(w, http.StatusUnauthorized, "Missing user identity", "")
+		return
 	} else {
 		tickets, err = h.repo.ListTicketsByUser(r.Context(), claims.Sub)
 	}
@@ -229,8 +232,7 @@ func (h *TicketHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error":"Internal server error"}`))
+		respondWithError(w, http.StatusInternalServerError, "unknown error", err.Error())
 		return
 	}
 

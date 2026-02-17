@@ -57,4 +57,12 @@ module "cognito" {
     var.customer_portal_url,
     "http://localhost:5173"
   ]
+  internal_portal_callback_urls = [
+    "${var.internal_portal_url}/callback",
+    "http://localhost:5173/callback"
+  ]
+  internal_portal_logout_urls = [
+    var.internal_portal_url,
+    "http://localhost:5173"
+  ]
 }

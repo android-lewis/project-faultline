@@ -1,4 +1,4 @@
-import { h, ComponentChildren } from 'preact';
+import { h, Fragment, ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { authService } from './auth-service';
 
@@ -14,17 +14,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const authenticated = await authService.isAuthenticated();
       if (!authenticated) {
         await authService.login();
-      } else {
-        setIsAuthenticated(true);
+        return;
       }
+      setIsAuthenticated(true);
     };
 
-    checkAuth();
+    void checkAuth();
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>;
+    return h('div', null, 'Loading...');
   }
 
-  return <>{children}</>;
+  return h(Fragment, null, children);
 }

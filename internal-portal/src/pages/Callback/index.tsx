@@ -17,8 +17,8 @@ export default function Callback() {
       }
     };
 
-    handleAuthCallback();
-  }, []);
+    void handleAuthCallback();
+  }, [route]);
 
   if (error) {
     return (
@@ -26,7 +26,7 @@ export default function Callback() {
         <h1 class="mb-2 text-2xl font-semibold text-slate-900">Authentication Error</h1>
         <p class="mb-4 text-sm text-rose-700">{error}</p>
         <a class="text-sm font-medium text-slate-900 underline" href="/">
-          Return to Home
+          Return to Dashboard
         </a>
       </div>
     );

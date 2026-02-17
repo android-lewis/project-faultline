@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'customer-portal/**'
+      - 'common/**'
 
 permissions:
   id-token: write
