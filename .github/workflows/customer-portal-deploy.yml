@@ -40,12 +40,12 @@ jobs:
 
       - name: Build with Vite
         env:
-          VITE_COGNITO_AUTHORITY: ${{ vars.VITE_COGNITO_AUTHORITY }}
-          VITE_COGNITO_CLIENT_ID: ${{ vars.VITE_COGNITO_CLIENT_ID }}
-          VITE_COGNITO_DOMAIN: ${{ vars.VITE_COGNITO_DOMAIN }}
-          VITE_COGNITO_REDIRECT_URI: ${{ vars.VITE_COGNITO_REDIRECT_URI }}
-          VITE_COGNITO_POST_LOGOUT_REDIRECT_URI: ${{ vars.VITE_COGNITO_POST_LOGOUT_REDIRECT_URI }}
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_COGNITO_AUTHORITY: ${{ vars.COGNITO_AUTHORITY }}
+          VITE_COGNITO_CLIENT_ID: ${{ vars.CUSTOMER_PORTAL_CLIENT_ID }}
+          VITE_COGNITO_DOMAIN: ${{ vars.COGNITO_DOMAIN }}
+          VITE_COGNITO_REDIRECT_URI: ${{ vars.CUSTOMER_COGNITO_REDIRECT_URI }}
+          VITE_COGNITO_POST_LOGOUT_REDIRECT_URI: ${{ vars.CUSTOMER_COGNITO_POST_LOGOUT_REDIRECT_URI }}
+          VITE_API_URL: ${{ vars.CUSTOMER_PORTAL_API_URL }}
         run: pnpm run build
 
       - name: Configure AWS credentials
