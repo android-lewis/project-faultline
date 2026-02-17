@@ -49,4 +49,12 @@ module "cognito" {
   source       = "./modules/cognito"
   project_name = var.project_name
   environment  = var.environment
+  customer_portal_callback_urls = [
+    "${var.customer_portal_url}/callback",
+    "http://localhost:5173/callback"
+  ]
+  customer_portal_logout_urls = [
+    var.customer_portal_url,
+    "http://localhost:5173"
+  ]
 }

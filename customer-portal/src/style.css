@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+	font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	background: #f8fafc;
+	color: #0f172a;
+}
+
+#app {
+	min-height: 100vh;
+}
+
+main {
+	margin: 0 auto;
+	width: 100%;
+	max-width: 80rem;
+	padding: 2rem 1rem;
+}

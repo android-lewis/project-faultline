@@ -1,135 +1,145 @@
 # Customer Portal
 
-A static web application for customers to submit support tickets.
+Preact + Vite single-page application for customer support ticket submission with Cognito authentication.
 
-## Overview
+## Features
 
-This is a single-page static site built with plain HTML, CSS, and Alpine.js. It allows users to submit support tickets with a description and optional file attachments.
+- **Authentication**: Cognito Hosted UI with OAuth 2.0 Authorization Code + PKCE flow
+- **Routing**: Client-side routing via `preact-iso`
+- **Auth Management**: `oidc-client-ts` for token handling, auto-refresh, and session storage
+- **API Integration**: Authenticated requests to the Lambda API with JWT bearer tokens
+- **Ticket Submission**: Create tickets with optional file attachments uploaded via presigned S3 URLs
+- **Ticket List**: View and refresh your existing tickets on the home page
+- **Styling**: Tailwind CSS v4 via Vite plugin
+
+## Prerequisites
+
+- Node.js 20+
+- pnpm 10+
+- AWS Cognito user pool (configured via Terraform in `infra/`)
+
+## Local Development Setup
+
+### 1. Configure environment variables
+
+Copy `.env.example` to `.env.local` and populate with your Cognito values:
+
+```bash
+cp .env.example .env.local
+```
+
+Get the required values from Terraform outputs:
+
+```bash
+cd ../infra
+terraform output
+```
+
+Update `.env.local`:
+
+```env
+VITE_COGNITO_AUTHORITY=https://cognito-idp.eu-west-2.amazonaws.com/{cognito_user_pool_id}
+VITE_COGNITO_CLIENT_ID={cognito_customer_portal_client_id}
+VITE_COGNITO_DOMAIN={cognito_user_pool_domain}.auth.eu-west-2.amazoncognito.com
+VITE_COGNITO_REDIRECT_URI=http://localhost:5173/callback
+VITE_COGNITO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173
+VITE_API_URL=http://localhost:3000
+```
+
+### 2. Install dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Run development server
+
+```bash
+pnpm run dev
+```
+
+App will be available at `http://localhost:5173`
+
+### 4. Run the API locally
+
+In a separate terminal:
+
+```bash
+cd ../api
+make local
+```
+
+API will be available at `http://localhost:3000`
+
+## Build for Production
+
+```bash
+pnpm run build
+```
+
+Output is in `dist/` directory.
+
+## Deployment
+
+Deployment is automated via GitHub Actions (`.github/workflows/customer-portal-deploy.yml`).
+
+On push to `main` (with changes in `customer-portal/**`):
+1. Builds the app with Vite
+2. Injects environment variables from GitHub vars
+3. Syncs `dist/` to S3 bucket
+
+### Required GitHub Variables
+
+Set these in your repository settings → Secrets and variables → Actions → Variables:
+
+- `VITE_COGNITO_AUTHORITY`
+- `VITE_COGNITO_CLIENT_ID`
+- `VITE_COGNITO_DOMAIN`
+- `VITE_COGNITO_REDIRECT_URI` (production S3 URL + `/callback`)
+- `VITE_COGNITO_POST_LOGOUT_REDIRECT_URI` (production S3 URL)
+- `VITE_API_URL` (API Gateway URL)
 
 ## Project Structure
 
 ```
 customer-portal/
-├── index.html              # Main page with ticket submission form
-├── css/
-│   └── styles.css          # Styling
-├── js/
-│   ├── config.js           # Environment configuration (gitignored)
-│   ├── config.js.example   # Example configuration file
-│   └── app.js              # Alpine.js application logic
-└── README.md               # This file
+├── src/
+│   ├── api/
+│   │   └── client.ts              # Authenticated API client
+│   ├── auth/
+│   │   ├── config.ts              # OIDC configuration
+│   │   ├── auth-service.ts        # Auth service wrapper
+│   │   └── AuthGuard.tsx          # Protected route guard
+│   ├── components/
+│   │   ├── Header.tsx             # Nav with user info + logout
+│   │   ├── TicketForm.tsx         # Submit ticket + attachment upload
+│   │   └── TicketList.tsx         # User ticket list
+│   ├── pages/
+│   │   ├── Home/
+│   │   ├── Callback/              # OAuth callback handler
+│   │   └── _404.tsx
+│   ├── index.tsx                  # App entry + router
+│   ├── style.css
+│   └── env.d.ts                   # TypeScript env declarations
+├── .env.example                   # Example environment file
+├── .env.local                     # Local dev config (gitignored)
+├── package.json
+├── vite.config.ts
+└── tsconfig.json
 ```
 
-## Setup
+## Authentication Flow
 
-1. **Configure the API endpoint:**
-   ```bash
-   cp js/config.js.example js/config.js
-   ```
-   
-2. **Edit `js/config.js`** and update the `API_BASE_URL` with your actual API Gateway URL:
-   ```javascript
-   window.APP_CONFIG = {
-       API_BASE_URL: 'https://your-api-id.execute-api.eu-west-2.amazonaws.com'
-   };
-   ```
+1. User visits protected route (e.g., `/`)
+2. `AuthGuard` checks if authenticated
+3. If not, redirects to Cognito Hosted UI
+4. User logs in with credentials
+5. Cognito redirects back to `/callback` with auth code
+6. `Callback` page exchanges code for tokens
+7. Tokens stored in session storage
+8. User redirected to home page
+9. All API requests include `Authorization: Bearer {access_token}` header
 
-## Local Development
+## Test Users
 
-Simply open `index.html` in a web browser, or use a local web server:
-
-```bash
-# Python 3
-python -m http.server 8080
-
-# Node.js (if you have http-server installed)
-npx http-server -p 8080
-```
-
-Then visit `http://localhost:8080`
-
-## Deployment to S3
-
-### Automated (GitHub Actions)
-
-On every push to `main` that changes files in `customer-portal/`, the workflow at `.github/workflows/customer-portal-deploy.yml` will:
-
-1. Generate `js/config.js` from the `CUSTOMER_PORTAL_API_URL` GitHub Actions variable
-2. Sync all files to the `project-faultline-customer-portal` S3 bucket
-
-**Required GitHub configuration:**
-- **Secret:** `AWS_ROLE_ARN` — IAM role ARN for OIDC authentication (shared with API deploy)
-- **Variable:** `CUSTOMER_PORTAL_API_URL` — API Gateway base URL (e.g., `https://abc123.execute-api.eu-west-2.amazonaws.com`)
-
-### Manual
-
-1. **Update `js/config.js`** with your production API URL
-
-2. **Upload files to S3:**
-   ```bash
-   aws s3 sync . s3://project-faultline-customer-portal --delete --exclude ".gitignore" --exclude "*.example" --exclude "README.md"
-   ```
-
-## API Requirements
-
-The frontend expects the following API endpoints:
-
-### `GET /tickets/upload-url`
-Returns a presigned S3 URL for file upload.
-
-**Query Parameters:**
-- `filename` (string, required): Name of the file to upload
-- `contentType` (string, required): MIME type of the file
-
-**Response:**
-```json
-{
-  "uploadUrl": "https://s3.amazonaws.com/...",
-  "key": "attachments/uuid/filename.ext"
-}
-```
-
-### `POST /tickets`
-Creates a new support ticket.
-
-**Request Body:**
-```json
-{
-  "description": "Issue description",
-  "attachments": ["key1", "key2"]
-}
-```
-
-**Response:**
-```json
-{
-  "id": "ticket-uuid"
-}
-```
-
-### CORS Configuration
-The API must allow cross-origin requests from the S3 website origin:
-- `Access-Control-Allow-Origin`: S3 website URL or `*` for development
-- `Access-Control-Allow-Methods`: `GET, POST, OPTIONS`
-- `Access-Control-Allow-Headers`: `Content-Type`
-
-## Features
-
-- ✅ Responsive design (mobile-friendly)
-- ✅ Client-side form validation
-- ✅ Multi-file upload support
-- ✅ Direct upload to S3 via presigned URLs
-- ✅ Loading states and error handling
-- ✅ Success confirmation with ticket ID
-- ✅ No build step required
-
-## Technologies
-
-- **Alpine.js 3.x** (loaded via CDN)
-- **HTML5**
-- **CSS3** (responsive, no framework)
-- **JavaScript ES6+**
-
-## Browser Support
-
-Modern browsers with ES6 support (Chrome, Firefox, Safari, Edge).
+See `infra/modules/cognito/main.tf` for test user credentials.

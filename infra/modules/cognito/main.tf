@@ -87,6 +87,13 @@ resource "aws_cognito_user_pool_client" "customer_portal" {
   write_attributes = [
     "email"
   ]
+
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code"]
+  allowed_oauth_scopes                 = ["openid", "email", "profile"]
+  callback_urls                        = var.customer_portal_callback_urls
+  logout_urls                          = var.customer_portal_logout_urls
+  supported_identity_providers         = ["COGNITO"]
 }
 
 resource "aws_cognito_user_pool_client" "internal_portal" {
@@ -124,7 +131,7 @@ resource "aws_cognito_user_pool_client" "internal_portal" {
 
 resource "aws_cognito_user" "test_user" {
   user_pool_id = aws_cognito_user_pool.main.id
-  username     = "testuser@faultline.demo"
+  username     = "testuser"
 
   attributes = {
     email          = "testuser@faultline.demo"
@@ -143,7 +150,7 @@ resource "aws_cognito_user" "test_user" {
 
 resource "aws_cognito_user" "test_admin" {
   user_pool_id = aws_cognito_user_pool.main.id
-  username     = "testadmin@faultline.demo"
+  username     = "testadmin"
 
   attributes = {
     email          = "testadmin@faultline.demo"
