@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/android-lewis/project-faultline/internal/handlers"
 )
 
-const jwtClaimHeaderPrefix = "X-Amzn-Requestcontext-Authorizer-Jwt-Claim-"
-
-// InjectLocalJWTClaims decodes bearer JWT payload and mirrors API Gateway claim headers.
+// InjectLocalJWTClaims decodes bearer JWT payload and stores claims in the
+// request context, mirroring how API Gateway populates requestContext.authorizer.jwt.claims.
 func InjectLocalJWTClaims(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
@@ -31,57 +32,40 @@ func InjectLocalJWTClaims(next http.Handler) http.Handler {
 			return
 		}
 
-		var claims map[string]any
-		if err := json.Unmarshal(payload, &claims); err != nil {
+		var raw map[string]any
+		if err := json.Unmarshal(payload, &raw); err != nil {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		if sub, ok := claims["sub"].(string); ok && sub != "" {
-			r.Header.Set(jwtClaimHeaderPrefix+"sub", sub)
+		claims := &handlers.JWTClaims{Groups: []string{}}
+		if sub, ok := raw["sub"].(string); ok {
+			claims.Sub = sub
 		}
-		if email, ok := claims["email"].(string); ok && email != "" {
-			r.Header.Set(jwtClaimHeaderPrefix+"email", email)
+		if email, ok := raw["email"].(string); ok {
+			claims.Email = email
 		}
-		if groupsHeader := groupsHeaderValue(claims["cognito:groups"]); groupsHeader != "" {
-			r.Header.Set(jwtClaimHeaderPrefix+"cognito:groups", groupsHeader)
-		}
+		claims.Groups = parseGroups(raw["cognito:groups"])
 
-		next.ServeHTTP(w, r)
+		ctx := handlers.ContextWithLocalJWTClaims(r.Context(), claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func groupsHeaderValue(raw any) string {
+func parseGroups(raw any) []string {
 	switch groups := raw.(type) {
 	case []any:
 		parsed := make([]string, 0, len(groups))
 		for _, g := range groups {
-			gString, ok := g.(string)
-			if !ok || gString == "" {
-				continue
+			if s, ok := g.(string); ok && s != "" {
+				parsed = append(parsed, s)
 			}
-			parsed = append(parsed, gString)
 		}
-
-		if len(parsed) == 0 {
-			return ""
-		}
-
-		marshaled, err := json.Marshal(parsed)
-		if err != nil {
-			return ""
-		}
-		return string(marshaled)
+		return parsed
 	case string:
-		if groups == "" {
-			return ""
+		if groups != "" {
+			return []string{groups}
 		}
-		marshaled, err := json.Marshal([]string{groups})
-		if err != nil {
-			return ""
-		}
-		return string(marshaled)
-	default:
-		return ""
 	}
+	return []string{}
 }

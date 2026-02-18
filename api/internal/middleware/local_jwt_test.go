@@ -10,7 +10,7 @@ import (
 	"github.com/android-lewis/project-faultline/internal/handlers"
 )
 
-func TestInjectLocalJWTClaims_SetsClaimHeaders(t *testing.T) {
+func TestInjectLocalJWTClaims_SetsClaimsInContext(t *testing.T) {
 	token := jwtForTest(t, map[string]any{
 		"sub":            "user-123",
 		"email":          "user@example.com",
@@ -29,14 +29,9 @@ func TestInjectLocalJWTClaims_SetsClaimHeaders(t *testing.T) {
 			t.Fatalf("claims groups = %#v, want %#v", claims.Groups, []string{"admins", "users"})
 		}
 
-		if got := r.Header.Get("X-Amzn-Requestcontext-Authorizer-Jwt-Claim-sub"); got != "user-123" {
-			t.Fatalf("sub header = %q, want %q", got, "user-123")
-		}
-		if got := r.Header.Get("X-Amzn-Requestcontext-Authorizer-Jwt-Claim-email"); got != "user@example.com" {
-			t.Fatalf("email header = %q, want %q", got, "user@example.com")
-		}
-		if got := r.Header.Get("X-Amzn-Requestcontext-Authorizer-Jwt-Claim-cognito:groups"); got != `["admins","users"]` {
-			t.Fatalf("groups header = %q, want %q", got, `["admins","users"]`)
+		// Headers should NOT be set (claims are in context now)
+		if got := r.Header.Get("X-Amzn-Requestcontext-Authorizer-Jwt-Claim-sub"); got != "" {
+			t.Fatalf("sub header = %q, want empty (claims should be in context, not headers)", got)
 		}
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -52,10 +47,11 @@ func TestInjectLocalJWTClaims_SetsClaimHeaders(t *testing.T) {
 	}
 }
 
-func TestInjectLocalJWTClaims_MissingAuthorization_NoHeadersInjected(t *testing.T) {
+func TestInjectLocalJWTClaims_MissingAuthorization_EmptyClaims(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if got := r.Header.Get("X-Amzn-Requestcontext-Authorizer-Jwt-Claim-sub"); got != "" {
-			t.Fatalf("sub header = %q, want empty", got)
+		claims := handlers.ExtractJWTClaims(r)
+		if claims.Sub != "" {
+			t.Fatalf("claims sub = %q, want empty", claims.Sub)
 		}
 		w.WriteHeader(http.StatusNoContent)
 	})

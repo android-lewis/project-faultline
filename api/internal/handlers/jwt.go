@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
-	"strings"
+
+	"github.com/awslabs/aws-lambda-go-api-proxy/core"
 )
 
 // JWTClaims contains user information extracted from the JWT by API Gateway
@@ -13,36 +15,45 @@ type JWTClaims struct {
 	Groups []string
 }
 
-// ExtractJWTClaims extracts JWT claims from the API Gateway request context
+// localJWTClaimsKey is the context key used by InjectLocalJWTClaims middleware.
+type localJWTClaimsKey struct{}
+
+// ContextWithLocalJWTClaims returns a new context carrying the given claims.
+// Used by the local-dev middleware to mirror API Gateway behaviour.
+func ContextWithLocalJWTClaims(ctx context.Context, claims *JWTClaims) context.Context {
+	return context.WithValue(ctx, localJWTClaimsKey{}, claims)
+}
+
+// ExtractJWTClaims extracts JWT claims from the API Gateway V2 request context
+// payload (production) or from a local-dev context value (local/SAM).
 func ExtractJWTClaims(r *http.Request) *JWTClaims {
+	// Production / SAM path: claims come from requestContext.authorizer.jwt.claims
+	if reqCtx, ok := core.GetAPIGatewayV2ContextFromContext(r.Context()); ok {
+		if reqCtx.Authorizer != nil && reqCtx.Authorizer.JWT != nil {
+			return claimsFromMap(reqCtx.Authorizer.JWT.Claims)
+		}
+	}
+
+	// Local-dev path: claims injected by InjectLocalJWTClaims middleware
+	if c, ok := r.Context().Value(localJWTClaimsKey{}).(*JWTClaims); ok {
+		return c
+	}
+
+	return &JWTClaims{Groups: []string{}}
+}
+
+func claimsFromMap(m map[string]string) *JWTClaims {
 	claims := &JWTClaims{
+		Sub:    m["sub"],
+		Email:  m["email"],
 		Groups: []string{},
 	}
-
-	// HTTP API JWT authorizer passes claims in the X-Amzn-Requestcontext-Authorizer-Jwt-Claim-* headers
-	// These are set by aws-lambda-go-api-proxy when it processes the Lambda event
-	for name, values := range r.Header {
-		lowerName := strings.ToLower(name)
-		if len(values) == 0 {
-			continue
-		}
-
-		if strings.HasPrefix(lowerName, "x-amzn-requestcontext-authorizer-jwt-claim-") {
-			claimName := strings.TrimPrefix(lowerName, "x-amzn-requestcontext-authorizer-jwt-claim-")
-			switch claimName {
-			case "sub":
-				claims.Sub = values[0]
-			case "email":
-				claims.Email = values[0]
-			case "cognito:groups":
-				var groups []string
-				if err := json.Unmarshal([]byte(values[0]), &groups); err == nil {
-					claims.Groups = groups
-				}
-			}
+	if raw, ok := m["cognito:groups"]; ok {
+		var groups []string
+		if err := json.Unmarshal([]byte(raw), &groups); err == nil {
+			claims.Groups = groups
 		}
 	}
-
 	return claims
 }
 
