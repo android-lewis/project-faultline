@@ -23,6 +23,16 @@ output "customer_portal_website_endpoint" {
   description = "Customer portal website endpoint"
 }
 
+output "customer_portal_cloudfront_domain" {
+  value       = module.cloudfront.customer_portal_domain_name
+  description = "Customer portal CloudFront domain name"
+}
+
+output "customer_portal_distribution_id" {
+  value       = module.cloudfront.customer_portal_distribution_id
+  description = "Customer portal CloudFront distribution ID"
+}
+
 output "internal_portal_bucket_name" {
   value       = module.s3.internal_portal_bucket_name
   description = "Internal portal S3 bucket name"
@@ -31,6 +41,16 @@ output "internal_portal_bucket_name" {
 output "internal_portal_website_endpoint" {
   value       = module.s3.internal_portal_website_endpoint
   description = "Internal portal website endpoint"
+}
+
+output "internal_portal_cloudfront_domain" {
+  value       = module.cloudfront.internal_portal_domain_name
+  description = "Internal portal CloudFront domain name"
+}
+
+output "internal_portal_distribution_id" {
+  value       = module.cloudfront.internal_portal_distribution_id
+  description = "Internal portal CloudFront distribution ID"
 }
 
 output "github_actions_role_arn" {

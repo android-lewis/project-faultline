@@ -64,3 +64,9 @@ jobs:
           aws s3 cp dist/index.html s3://project-faultline-customer-portal/index.html \
             --cache-control "public, max-age=0, must-revalidate" \
             --content-type "text/html"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CUSTOMER_PORTAL_DISTRIBUTION_ID }} \
+            --paths "/*"

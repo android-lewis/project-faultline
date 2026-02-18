@@ -64,3 +64,9 @@ jobs:
             --cache-control "public, max-age=0, must-revalidate" \
             --content-type "text/html"
         working-directory: './internal-portal'
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.INTERNAL_PORTAL_DISTRIBUTION_ID }} \
+            --paths "/*"

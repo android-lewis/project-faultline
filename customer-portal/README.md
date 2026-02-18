@@ -143,4 +143,3 @@ customer-portal/
 ## Test Users
 
 See `infra/modules/cognito/main.tf` for test user credentials.
-#

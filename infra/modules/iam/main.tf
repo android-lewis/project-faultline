@@ -162,6 +162,14 @@ data "aws_iam_policy_document" "github_actions_sam_deploy" {
     ]
     resources = ["*"]
   }
+
+  statement {
+    sid = "CloudFrontAccess"
+    actions = [
+      "cloudfront:CreateInvalidation"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "github_actions_sam_deploy" {

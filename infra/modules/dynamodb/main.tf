@@ -14,7 +14,7 @@ resource "aws_dynamodb_table" "support_tickets" {
   }
 
   global_secondary_index {
-    name            = "UserID-index"
+    name = "UserID-index"
     key_schema {
       attribute_name = "UserID"
       key_type       = "HASH"

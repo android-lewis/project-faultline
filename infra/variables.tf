@@ -27,15 +27,3 @@ variable "github_repository" {
   description = "GitHub repository in the format owner/repo for OIDC trust"
   default     = "android-lewis/project-faultline"
 }
-
-variable "customer_portal_url" {
-  type        = string
-  description = "Customer portal URL (for OAuth callbacks)"
-  default     = "https://project-faultline-customer-portal-demo.s3.eu-west-2.amazonaws.com"
-}
-
-variable "internal_portal_url" {
-  type        = string
-  description = "Customer portal URL (for OAuth callbacks)"
-  default     = "https://project-faultline-internal-portal-demo.s3.eu-west-2.amazonaws.com"
-}
